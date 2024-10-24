@@ -1,8 +1,4 @@
 import datetime
-import pyttsx3
-import speech_recognition as sr
-import yfinance as yf
-import webbrowser
 
 def audio_to_text():
     
