@@ -127,6 +127,7 @@ def decirDatosHoy(datos):
                     continue
 
         if temperaturaCelsius is not None and datos == 'celsius':
+        if temperaturaCelsius is not None and datos == 'celsius':
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
         elif temperaturaFahrenheit is not None and datos == 'fahrenheit':
             hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
