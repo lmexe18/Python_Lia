@@ -90,6 +90,14 @@ def requests():
             decirDatosHoy('fahrenheit')
         elif 'qué humedad hace' in request:
             decirDatosHoy('humedad')
+        elif 'qué temperatura media hay' in request:
+            decirMedias('temperaturaCompleta', 'indefinido')
+        elif 'cuántos grados celsius de media hacen' in request:
+            decirMedias('celsius', 'indefinido')
+        elif 'cuántos grados fahrenheit de media hacen' in request:
+            decirMedias('fahrenheit', 'indefinido')
+            
+         #Realizar temperatura media del último mes, de la última quincena y de la última semana
         
         
 def decirDatosHoy(datos):
@@ -127,7 +135,6 @@ def decirDatosHoy(datos):
                     continue
 
         if temperaturaCelsius is not None and datos == 'celsius':
-        if temperaturaCelsius is not None and datos == 'celsius':
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
         elif temperaturaFahrenheit is not None and datos == 'fahrenheit':
             hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
@@ -137,6 +144,60 @@ def decirDatosHoy(datos):
             hablar(f'La humedad actual es de {humedad}%.')
         else:
             hablar("No se encontraron datos sobre hoy.")
+        
+    except FileNotFoundError:
+        hablar("No pude encontrar el archivo de datos de temperatura.")
+    except Exception as e:
+        hablar("Ocurrió un error inesperado.")
+        print(f"Algo ha ido mal: {str(e)}")
+        
+def decirMedias(datos, rango):
+    try:
+        with open(archivoDatos, 'r') as file:
+            lineas = file.readlines()
+
+        temperaturasCelsius = []
+        temperaturasFahrenheit = []
+        humedades = []
+        
+        for linea in lineas:
+            try:
+                partes = linea.split(' ', 2)
+                if len(partes) >= 3:
+                    jsonStrings = partes[2].split('} {')
+                    json1 = json.loads(jsonStrings[0] + '}')
+                    json2 = json.loads('{' + jsonStrings[1])
+
+                    if 'tC' in json1:
+                        temperaturasCelsius.push(json1['tC'])
+                        temperaturasFahrenheit.push(json1['tF'])
+                    elif 'payload' in json2 and 'tC' in json2['payload'] and 'tF':
+                        temperaturasCelsius.push(json2['payload']['tC'])
+                        temperaturasFahrenheit.push(json2['payload']['tF'])
+                    elif 'rh' in json1:
+                        humedades.push(json1['rh'])
+                    elif 'payload' in json2 and 'rh' in json2['payload']:
+                        humedades.push(json2['payload']['rh'])
+                            
+            except json.JSONDecodeError:
+                continue
+        
+        # Medias completas
+        mediaCelsius = sum(temperaturasCelsius) / len(temperaturasCelsius)
+        mediaFahrenheit = sum(temperaturasFahrenheit) / len(temperaturasFahrenheit)
+        
+        # Medias del último mes
+        
+        # Medias de la última quincena
+        
+        # Medias de la última semana
+            
+        if datos == 'temperaturaCompleta' and rango == 'indefinido':
+            hablar(f'La temperatura media es de {mediaCelsius} grados Celsius y de {mediaFahrenheit} grados Fahrenheit.')
+        if datos == 'celsius' and rango == 'indefinido':
+            hablar(f'La temperatura media es de {mediaCelsius} grados Celsius.')
+        if datos == 'fahrenheit' and rango == 'indefinido':
+            hablar(f'La temperatura media es de {mediaFahrenheit} grados Faren.')
         
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")
