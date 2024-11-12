@@ -83,16 +83,16 @@ def requests():
         request = audioATexto().lower()
     
         if 'qué temperatura hace' in request:
-            decirTemperaturaHoy('temperaturaCompleta')
+            decirDatosHoy('temperaturaCompleta')
         elif 'cuántos grados celsius hacen' in request:
-           decirTemperaturaHoy('celsius')
+           decirDatosHoy('celsius')
         elif 'cuántos grados fahrenheit hacen' in request:
-            decirTemperaturaHoy('fahrenheit')
+            decirDatosHoy('fahrenheit')
         elif 'qué humedad hace' in request:
-            decirHumedadHoy('humedad')
+            decirDatosHoy('humedad')
         
         
-def decirTemperaturaHoy(datos):
+def decirDatosHoy(datos):
     try:
         with open(archivoDatos, 'r') as file:
             lineas = file.readlines()
@@ -100,6 +100,7 @@ def decirTemperaturaHoy(datos):
         fechaActual = datetime.datetime.now().strftime('%Y-%m-%d')
         temperaturaCelsius = None
         temperaturaFahrenheit = None
+        humedad = None
 
         for linea in lineas:
             fecha = linea[:10]
@@ -114,12 +115,14 @@ def decirTemperaturaHoy(datos):
                         if 'tC' in json1:
                             temperaturaCelsius = json1['tC']
                             temperaturaFahrenheit = json1['tF']
-                        elif 'payload' in json2 and 'tC' in json2['payload']:
+                        elif 'payload' in json2 and 'tC' in json2['payload'] and 'tF':
                             temperaturaCelsius = json2['payload']['tC']
                             temperaturaFahrenheit = json2['payload']['tF']
+                        elif 'rh' in json1:
+                            humedad = json1['rh']
+                        elif 'payload' in json2 and 'rh' in json2['payload']:
+                            humedad = json2['payload']['rh']
                             
-                        if temperaturaCelsius is not None and temperaturaFahrenheit is not None: 
-                            break
                 except json.JSONDecodeError:
                     continue
 
@@ -129,14 +132,13 @@ def decirTemperaturaHoy(datos):
             hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
         elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and datos == 'temperaturaCompleta' :
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius y {temperaturaFahrenheit} grados Fahrenheit.')
+        elif humedad is not None and datos == 'humedad':
+            hablar(f'La humedad actual es de {humedad}%.')
         else:
-            hablar("No se encontraron datos de temperatura para hoy.")
+            hablar("No se encontraron datos sobre hoy.")
         
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")
     except Exception as e:
         hablar("Ocurrió un error inesperado.")
         print(f"Algo ha ido mal: {str(e)}")
-
-def decirHumedadHoy():
-    print('Hola :)')
