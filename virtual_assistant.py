@@ -81,22 +81,25 @@ def requests():
     stop = False
     while not stop:
         request = audioATexto().lower()
+    
+        if 'qué temperatura hace' in request:
+            decirTemperaturaHoy('temperaturaCompleta')
+        elif 'cuántos grados celsius hacen' in request:
+           decirTemperaturaHoy('celsius')
+        elif 'cuántos grados fahrenheit hacen' in request:
+            decirTemperaturaHoy('fahrenheit')
+        elif 'qué humedad hace' in request:
+            decirHumedadHoy('humedad')
         
-        if 'qué día es hoy' in request:
-            decirDia()
-        elif 'qué hora es' in request:
-            decirHora()
-        elif 'qué temperatura hace' in request:
-            decirTempHoy()
         
-def decirTempHoy():
+def decirTemperaturaHoy(datos):
     try:
-
         with open(archivoDatos, 'r') as file:
             lineas = file.readlines()
 
         fechaActual = datetime.datetime.now().strftime('%Y-%m-%d')
         temperaturaCelsius = None
+        temperaturaFahrenheit = None
 
         for linea in lineas:
             fecha = linea[:10]
@@ -110,22 +113,30 @@ def decirTempHoy():
 
                         if 'tC' in json1:
                             temperaturaCelsius = json1['tC']
+                            temperaturaFahrenheit = json1['tF']
                         elif 'payload' in json2 and 'tC' in json2['payload']:
                             temperaturaCelsius = json2['payload']['tC']
-                        
-                        if temperaturaCelsius is not None:
+                            temperaturaFahrenheit = json2['payload']['tF']
+                            
+                        if temperaturaCelsius is not None and temperaturaFahrenheit is not None: 
                             break
                 except json.JSONDecodeError:
                     continue
 
-        if temperaturaCelsius is not None:
+        if temperaturaCelsius is not None and datos == 'celsius':
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
+        elif temperaturaFahrenheit is not None and datos == 'fahrenheit':
+            hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
+        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and datos == 'temperaturaCompleta' :
+            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius y {temperaturaFahrenheit} grados Fahrenheit.')
         else:
             hablar("No se encontraron datos de temperatura para hoy.")
-
+        
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")
     except Exception as e:
         hablar("Ocurrió un error inesperado.")
         print(f"Algo ha ido mal: {str(e)}")
 
+def decirHumedadHoy():
+    print('Hola :)')
