@@ -1,23 +1,22 @@
 import datetime
+import pyttsx3
+import speech_recognition as sr
+import json
 
-def audio_to_text():
+archivoDatos = './out_shellyht.json'
+
+def audioATexto():
     
-    # Recognizer
     r = sr.Recognizer()
     
-    # Configuramos el micro
     with sr.Microphone() as origin:
-        # Tiempo de espera desde que se activa el micro
         r.pause_threshold = 0.8
         
-        # Informamos que comienza la grabación
         print('Puedes comenzar a hablar')
         
-        # Guardar audio
         audio = r.listen(origin)
         
         try:
-            # Buscar en google lo que hemos escuchado
             text = r.recognize_google(audio, language='es-es')
             return text
         except sr.UnknownValueError:
@@ -30,19 +29,15 @@ def audio_to_text():
             print('Ups, algo ha salido mal')
             return 'Esperando'
         
-def talk(msg):
+def hablar(msg):
     newVoiceRate = 180
-    
-    # Encender motor pyttsx3
     engine = pyttsx3.init()
-    
     engine.setProperty('voice', 'com.apple.eloquence.es-ES.Monica')
     engine.setProperty('rate', newVoiceRate)
-    # Pronunciar mensjaje
     engine.say(msg)
     engine.runAndWait()
     
-def get_voices():
+def obtenerVoces():
     engine = pyttsx3.init()
     voices = engine.getProperty('voices')
     for i, voice in enumerate(voices):
@@ -54,7 +49,7 @@ def get_voices():
         print(f"Género {voice.age}")
         print(f"---------------------------")
         
-def say_day():
+def decirDia():
     day = datetime.date.today()
     weekday = {
         0: 'Lunes',
@@ -65,30 +60,72 @@ def say_day():
         5: 'Sábado',
         6: 'Domingo'
     }
-    talk(f'Hoy es {weekday[day.weekday()]}')
+    hablar(f'Hoy es {weekday[day.weekday()]}')
     
-def say_hour():
-    hour = datetime.datetime.now()
-    talk(f'En este momento son las {hour.hour} horas y {hour.minute} minutos')
+def decirHora():
+    hora = datetime.datetime.now()
+    hablar(f'En este momento son las {hora.hour} horas y {hora.minute} minutos')
     
 def saludo():
-    hour = datetime.datetime.now()
-    if hour.hour < 6 or hour.hour > 20:
+    hora = datetime.datetime.now()
+    if hora.hour < 6 or hora.hour > 20:
         momento = 'Buenas noches.'
-    elif 6 <= hour.hour < 13:
+    elif 6 <= hora.hour < 13:
         momento = 'Buenos días.'
     else:
         momento = 'Buenas tardes.'
-    talk(f'{momento} Soy Lía, tu asistente personal. Por favor, dime en qué puedo ayudarte.')
+    hablar(f'{momento} Soy Lía, tu asistente personal. Por favor, dime en qué puedo ayudarte.')
     
 def requests():
     saludo()
     stop = False
     while not stop:
-        #Activar el micro y guardar la request en un string
-        request = audio_to_text().lower()
+        request = audioATexto().lower()
         
         if 'qué día es hoy' in request:
-            say_day()
+            decirDia()
         elif 'qué hora es' in request:
-            say_hour()
+            decirHora()
+        elif 'qué temperatura hace' in request:
+            decirTempHoy()
+        
+def decirTempHoy():
+    try:
+
+        with open(archivoDatos, 'r') as file:
+            lineas = file.readlines()
+
+        fechaActual = datetime.datetime.now().strftime('%Y-%m-%d')
+        temperaturaCelsius = None
+
+        for linea in lineas:
+            fecha = linea[:10]
+            if fechaActual == fecha:
+                try:
+                    partes = linea.split(' ', 2)
+                    if len(partes) >= 3:
+                        jsonStrings = partes[2].split('} {')
+                        json1 = json.loads(jsonStrings[0] + '}')
+                        json2 = json.loads('{' + jsonStrings[1])
+
+                        if 'tC' in json1:
+                            temperaturaCelsius = json1['tC']
+                        elif 'payload' in json2 and 'tC' in json2['payload']:
+                            temperaturaCelsius = json2['payload']['tC']
+                        
+                        if temperaturaCelsius is not None:
+                            break
+                except json.JSONDecodeError:
+                    continue
+
+        if temperaturaCelsius is not None:
+            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
+        else:
+            hablar("No se encontraron datos de temperatura para hoy.")
+
+    except FileNotFoundError:
+        hablar("No pude encontrar el archivo de datos de temperatura.")
+    except Exception as e:
+        hablar("Ocurrió un error inesperado.")
+        print(f"Algo ha ido mal: {str(e)}")
+
