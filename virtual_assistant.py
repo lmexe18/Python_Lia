@@ -106,19 +106,19 @@ def requests():
             request = audioATexto().lower()
             if 'cuál es la temperatura actual' in request:
                 decirDatosHoy(stringsJson["TODO"])
-            elif 'cuántos grados celsius hacen' in request:
+            elif 'cuáles son los grados celsius actuales' in request:
                 decirDatosHoy(stringsJson["CEL"])
-            elif 'cuántos grados fahrenheit hacen' in request:
+            elif 'cuáles son los grados fahrenheit actuales' in request:
                 decirDatosHoy(stringsJson["FAH"])
-            elif 'qué humedad hace' in request:
+            elif 'cuál es la humedad actual' in request:
                 decirDatosHoy(stringsJson["HUM"])
-            elif 'qué temperatura media hay' in request:
+            elif 'cuál es la temperatura media' in request:
                 decirMedias(stringsJson["TODO"])
-            elif 'cuántos grados celsius hay de media' in request:
+            elif 'cuáles son los grados celsius de media' in request:
                 decirMedias(stringsJson["CEL"])
-            elif 'cuántos grados fahrenheit hay de media' in request:
+            elif 'cuáles son los grados fahrenheit de media' in request:
                 decirMedias(stringsJson["FAH"])
-            elif 'cuánta humedad hay de media' in request:
+            elif 'cuál es la humedad de media' in request:
                 decirMedias(stringsJson["HUM"])
             elif 'detener' in request or 'salir' in request:
                 hablar("Adiós. Espero haber sido de ayuda.")
