@@ -104,7 +104,7 @@ def requests():
     while not stop:
         try:
             request = audioATexto().lower()
-            if 'qué temperatura hace' in request:
+            if 'cuál es la temperatura actual' in request:
                 decirDatosHoy(stringsJson.TODO)
             elif 'cuántos grados celsius hacen' in request:
                 decirDatosHoy(stringsJson.CELSIUS)
