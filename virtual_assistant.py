@@ -4,6 +4,9 @@ import speech_recognition as sr
 import json
 
 archivoDatos = './out_shellyht.json'
+archivoStrings = './strings.json'
+datosJson = {}
+stringsJson = {}
 
 def audioATexto():
     
@@ -76,41 +79,67 @@ def saludo():
         momento = 'Buenas tardes.'
     hablar(f'{momento} Soy Lía, tu asistente personal. Por favor, dime en qué puedo ayudarte.')
     
+def cargarJsons():
+    
+    global datosJson, stringsJson 
+
+    try:
+        with open(archivoDatos, 'r') as file:
+            datosJson = json.load(file) 
+    except (json.JSONDecodeError, FileNotFoundError) as e:
+        print(f"Error al cargar {archivoDatos}: {str(e)}")
+        datosJson = {} 
+
+    try:
+        with open(archivoStrings, 'r') as file:
+            stringsJson = json.load(file) 
+    except (json.JSONDecodeError, FileNotFoundError) as e:
+        print(f"Error al cargar {archivoStrings}: {str(e)}")
+        stringsJson = {}
+    
 def requests():
     saludo()
+    cargarJsons()
     stop = False
     while not stop:
-        request = audioATexto().lower()
-    
-        if 'qué temperatura hace' in request:
-            decirDatosHoy('temperaturaCompleta')
-        elif 'cuántos grados celsius hacen' in request:
-           decirDatosHoy('celsius')
-        elif 'cuántos grados fahrenheit hacen' in request:
-            decirDatosHoy('fahrenheit')
-        elif 'qué humedad hace' in request:
-            decirDatosHoy('humedad')
-        elif 'qué temperatura media hay' in request:
-            decirMedias('temperaturaCompleta', 'indefinido')
-        elif 'cuántos grados celsius de media hacen' in request:
-            decirMedias('celsius', 'indefinido')
-        elif 'cuántos grados fahrenheit de media hacen' in request:
-            decirMedias('fahrenheit', 'indefinido')
+        try:
+            request = audioATexto().lower()
+            if 'qué temperatura hace' in request:
+                decirDatosHoy(stringsJson.TODO)
+            elif 'cuántos grados celsius hacen' in request:
+                decirDatosHoy(stringsJson.CELSIUS)
+            elif 'cuántos grados fahrenheit hacen' in request:
+                decirDatosHoy(stringsJson.FAHRENHEIT)
+            elif 'qué humedad hace' in request:
+                decirDatosHoy(stringsJson.HUMEDAD)
+            elif 'qué temperatura media hay' in request:
+                decirMedias(stringsJson.TODO)
+            elif 'cuántos grados celsius hay de media' in request:
+                decirMedias(stringsJson.CELSIUS)
+            elif 'cuántos grados fahrenheit hay de media' in request:
+                decirMedias(stringsJson.FAHRENHEIT)
+            elif 'cuánta humedad hay de media' in request:
+                decirMedias(stringsJson.HUMEDAD)
+            elif 'detener' in request or 'salir' in request:
+                hablar("Adiós. Espero haber sido de ayuda.")
+                stop = True
+        except Exception as e:
+            hablar("Ocurrió un error inesperado.")
+            print(f"Algo ha ido mal: {str(e)}")
             
-         #Realizar temperatura media del último mes, de la última quincena y de la última semana
-        
+def obtenerFechaActual():
+     fecha = datetime.datetime.now().strftime('%Y-%m-%d')
+     return fecha
         
 def decirDatosHoy(datos):
     try:
-        with open(archivoDatos, 'r') as file:
-            lineas = file.readlines()
 
-        fechaActual = datetime.datetime.now().strftime('%Y-%m-%d')
+        fechaActual = obtenerFechaActual()
         temperaturaCelsius = None
         temperaturaFahrenheit = None
         humedad = None
 
-        for linea in lineas:
+        for linea in datosJson:
             fecha = linea[:10]
             if fechaActual == fecha:
                 try:
@@ -134,13 +163,13 @@ def decirDatosHoy(datos):
                 except json.JSONDecodeError:
                     continue
 
-        if temperaturaCelsius is not None and datos == 'celsius':
+        if temperaturaCelsius is not None and datos == stringsJson.CELSIUS:
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
-        elif temperaturaFahrenheit is not None and datos == 'fahrenheit':
+        elif temperaturaFahrenheit is not None and datos == stringsJson.FAHRENHEIT:
             hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
-        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and datos == 'temperaturaCompleta' :
-            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius y {temperaturaFahrenheit} grados Fahrenheit.')
-        elif humedad is not None and datos == 'humedad':
+        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and humedad is not None and datos == stringsJson.TODO :
+            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius, {temperaturaFahrenheit} grados Fahrenheit y una humedad de {humedad}%')
+        elif humedad is not None and datos == stringsJson.HUMEDAD:
             hablar(f'La humedad actual es de {humedad}%.')
         else:
             hablar("No se encontraron datos sobre hoy.")
@@ -150,54 +179,73 @@ def decirDatosHoy(datos):
     except Exception as e:
         hablar("Ocurrió un error inesperado.")
         print(f"Algo ha ido mal: {str(e)}")
+
+def calcularMedia(datos):
+    num = 0
+    for dato in datos:
+        num == num + dato
+    media = num / len(datos)
+    
+def obtenerFechasSemanaAnterior():
+    fecha = obtenerFechaActual()
+    print(fecha)
+    lunesActual = fecha - datetime.timedelta(days=fecha.weekday())
+    lunesAnterior = lunesActual - datetime.timedelta(weeks=1)
+    fechasAnteriores = [(lunesAnterior + datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+    print("SEMANA ANTERIOR:"+fechasAnteriores)
+    
+    return fechasAnteriores
         
-def decirMedias(datos, rango):
+def decirMedias(datos):
     try:
-        with open(archivoDatos, 'r') as file:
-            lineas = file.readlines()
 
         temperaturasCelsius = []
         temperaturasFahrenheit = []
         humedades = []
         
-        for linea in lineas:
+        for linea in datosJson:
             try:
-                partes = linea.split(' ', 2)
-                if len(partes) >= 3:
-                    jsonStrings = partes[2].split('} {')
-                    json1 = json.loads(jsonStrings[0] + '}')
-                    json2 = json.loads('{' + jsonStrings[1])
+                fecha = linea[:10]
+                fechasValidas = obtenerFechasSemanaAnterior()
+                for dias in fechasValidas:
+                    if fecha == dias:
+                        partes = linea.split(' ', 2)
+                        if len(partes) >= 3:
+                            jsonStrings = partes[2].split('} {')
+                            json1 = json.loads(jsonStrings[0] + '}')
+                            json2 = json.loads('{' + jsonStrings[1])
 
-                    if 'tC' in json1:
-                        temperaturasCelsius.push(json1['tC'])
-                        temperaturasFahrenheit.push(json1['tF'])
-                    elif 'payload' in json2 and 'tC' in json2['payload'] and 'tF':
-                        temperaturasCelsius.push(json2['payload']['tC'])
-                        temperaturasFahrenheit.push(json2['payload']['tF'])
-                    elif 'rh' in json1:
-                        humedades.push(json1['rh'])
-                    elif 'payload' in json2 and 'rh' in json2['payload']:
-                        humedades.push(json2['payload']['rh'])
-                            
+                            if 'tC' in json1:
+                                temperaturasCelsius.push(json1['tC'])
+                                temperaturasFahrenheit.push(json1['tF'])
+                            elif 'payload' in json2 and 'tC' in json2['payload'] and 'tF':
+                                temperaturasCelsius.push(json2['payload']['tC'])
+                                temperaturasFahrenheit.push(json2['payload']['tF'])
+                            elif 'rh' in json1:
+                                humedades.push(json1['rh'])
+                            elif 'payload' in json2 and 'rh' in json2['payload']:
+                                humedades.push(json2['payload']['rh'])
+                                    
             except json.JSONDecodeError:
                 continue
         
-        # Medias completas
-        mediaCelsius = sum(temperaturasCelsius) / len(temperaturasCelsius)
-        mediaFahrenheit = sum(temperaturasFahrenheit) / len(temperaturasFahrenheit)
+        if len(temperaturasCelsius) > 0:
+            mediaCelsius = calcularMedia(temperaturasCelsius)
+        if len(temperaturasFahrenheit) > 0:
+            mediaFahrenheit = calcularMedia(temperaturasFahrenheit)
+        if len(humedades) > 0:
+            mediaHumedad = calcularMedia(humedades)
         
-        # Medias del último mes
-        
-        # Medias de la última quincena
-        
-        # Medias de la última semana
-            
-        if datos == 'temperaturaCompleta' and rango == 'indefinido':
+        if datos == stringsJson.TODO and len(temperaturasCelsius) > 0 and len(temperaturasFahrenheit) > 0 and len(humedades) > 0:
             hablar(f'La temperatura media es de {mediaCelsius} grados Celsius y de {mediaFahrenheit} grados Fahrenheit.')
-        if datos == 'celsius' and rango == 'indefinido':
+        elif datos == stringsJson.CELSIUS and len(mediaCelsius) > 0:
             hablar(f'La temperatura media es de {mediaCelsius} grados Celsius.')
-        if datos == 'fahrenheit' and rango == 'indefinido':
+        elif datos == stringsJson.FAHRENHEIT and len(mediaFahrenheit) > 0:
             hablar(f'La temperatura media es de {mediaFahrenheit} grados Faren.')
+        elif datos == stringsJson.HUMEDAD and len(mediaHumedad) > 0:
+            hablar(f'La humedad media es de {mediaHumedad}%.')
+        else:
+            hablar('No hay datos disponibles para calcular la media.')
         
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")
