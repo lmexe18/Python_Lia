@@ -1,6 +1,6 @@
 {
-    "CELSIUS":"celsius",
-    "FAHRENHEIT":"fahrenheit",
+    "CEL":"celsius",
+    "FAH":"fahrenheit",
     "TODO":"climaCompleto",
-    "HUMEDAD":"humedad"
+    "HUM":"humedad"
 }

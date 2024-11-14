@@ -105,21 +105,21 @@ def requests():
         try:
             request = audioATexto().lower()
             if 'cuál es la temperatura actual' in request:
-                decirDatosHoy(stringsJson.TODO)
+                decirDatosHoy(stringsJson["TODO"])
             elif 'cuántos grados celsius hacen' in request:
-                decirDatosHoy(stringsJson.CELSIUS)
+                decirDatosHoy(stringsJson["CEL"])
             elif 'cuántos grados fahrenheit hacen' in request:
-                decirDatosHoy(stringsJson.FAHRENHEIT)
+                decirDatosHoy(stringsJson["FAH"])
             elif 'qué humedad hace' in request:
-                decirDatosHoy(stringsJson.HUMEDAD)
+                decirDatosHoy(stringsJson["HUM"])
             elif 'qué temperatura media hay' in request:
-                decirMedias(stringsJson.TODO)
+                decirMedias(stringsJson["TODO"])
             elif 'cuántos grados celsius hay de media' in request:
-                decirMedias(stringsJson.CELSIUS)
+                decirMedias(stringsJson["CEL"])
             elif 'cuántos grados fahrenheit hay de media' in request:
-                decirMedias(stringsJson.FAHRENHEIT)
+                decirMedias(stringsJson["FAH"])
             elif 'cuánta humedad hay de media' in request:
-                decirMedias(stringsJson.HUMEDAD)
+                decirMedias(stringsJson["HUM"])
             elif 'detener' in request or 'salir' in request:
                 hablar("Adiós. Espero haber sido de ayuda.")
                 stop = True
@@ -163,13 +163,13 @@ def decirDatosHoy(datos):
                 except json.JSONDecodeError:
                     continue
 
-        if temperaturaCelsius is not None and datos == stringsJson.CELSIUS:
+        if temperaturaCelsius is not None and datos == stringsJson["CEL"]:
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
-        elif temperaturaFahrenheit is not None and datos == stringsJson.FAHRENHEIT:
+        elif temperaturaFahrenheit is not None and datos == stringsJson["FAH"]:
             hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
-        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and humedad is not None and datos == stringsJson.TODO :
+        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and humedad is not None and datos == stringsJson["TODO"] :
             hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius, {temperaturaFahrenheit} grados Fahrenheit y una humedad de {humedad}%')
-        elif humedad is not None and datos == stringsJson.HUMEDAD:
+        elif humedad is not None and datos == stringsJson["TODO"]:
             hablar(f'La humedad actual es de {humedad}%.')
         else:
             hablar("No se encontraron datos sobre hoy.")
@@ -236,13 +236,13 @@ def decirMedias(datos):
         if len(humedades) > 0:
             mediaHumedad = calcularMedia(humedades)
         
-        if datos == stringsJson.TODO and len(temperaturasCelsius) > 0 and len(temperaturasFahrenheit) > 0 and len(humedades) > 0:
+        if datos == stringsJson["TODO"] and len(temperaturasCelsius) > 0 and len(temperaturasFahrenheit) > 0 and len(humedades) > 0:
             hablar(f'La temperatura media es de {mediaCelsius} grados Celsius y de {mediaFahrenheit} grados Fahrenheit.')
-        elif datos == stringsJson.CELSIUS and len(mediaCelsius) > 0:
+        elif datos == stringsJson["CEL"] and len(mediaCelsius) > 0:
             hablar(f'La temperatura media es de {mediaCelsius} grados Celsius.')
-        elif datos == stringsJson.FAHRENHEIT and len(mediaFahrenheit) > 0:
+        elif datos == stringsJson["FAH"] and len(mediaFahrenheit) > 0:
             hablar(f'La temperatura media es de {mediaFahrenheit} grados Faren.')
-        elif datos == stringsJson.HUMEDAD and len(mediaHumedad) > 0:
+        elif datos == stringsJson["HUM"] and len(mediaHumedad) > 0:
             hablar(f'La humedad media es de {mediaHumedad}%.')
         else:
             hablar('No hay datos disponibles para calcular la media.')
