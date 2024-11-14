@@ -1,3 +1,7 @@
+rec_voz_venv
+enviarDatos.json
+PyWhatKit_DB.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
