@@ -1,3 +1,4 @@
+# @author Laura María Pedraza Gómez
 import datetime
 import pyttsx3
 import speech_recognition as sr
