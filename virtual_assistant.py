@@ -2,10 +2,14 @@ import datetime
 import pyttsx3
 import speech_recognition as sr
 import json
+import pywhatkit as kit
 
 archivoDatos = './out_shellyht.json'
 archivoStrings = './strings.json'
+archivoEnviarDatos = './enviarDatos.json'
+
 stringsJson = {}
+enviarJson = {}
 
 def audioATexto():
     
@@ -76,20 +80,22 @@ def saludo():
         momento = 'Buenos días.'
     else:
         momento = 'Buenas tardes.'
-    hablar(f'{momento} Soy Lía, tu asistente personal. Por favor, dime en qué puedo ayudarte.')
+    hablar(f'{momento} Soy Lía, tu asistente personal de temperatura. Por favor, dime en qué puedo ayudarte.')
     
-# Solamente cargamos el json de los strings para evitar el error del jsonDecoder en el out_shellyht.json
+# Solamente cargamos el json de los strings y de los datos a enviar para evitar el error del jsonDecoder en el out_shellyht.json
 def cargarJsonStrings():
     global stringsJson 
+    global enviarJson
     try:
         with open(archivoStrings, 'r') as file:
-            stringsJson = json.load(file)  
+            stringsJson = json.load(file)
+        with open(archivoEnviarDatos, 'r') as file:
+            enviarJson = json.load(file)
             
     except Exception as e:
         hablar("Ocurrió un error inesperado.")
         print(f"Algo ha ido mal: {str(e)}")
             
-    
     
 def requests():
     saludo()
@@ -120,7 +126,13 @@ def requests():
 def obtenerFechaActual():
      fecha = datetime.datetime.now().strftime('%Y-%m-%d')
      return fecha
-        
+
+def enviarMensaje(mensaje):
+    numTelf = enviarJson["TEL"]
+    hora = datetime.datetime.now().hour
+    minuto = datetime.datetime.now().minute + 1 
+    kit.sendwhatmsg(numTelf, mensaje, hora, minuto)
+    
 def decirDatosHoy(datos):
     try:
         with open(archivoDatos, 'r') as file:
@@ -130,7 +142,9 @@ def decirDatosHoy(datos):
         temperaturaCelsius = None
         temperaturaFahrenheit = None
         humedad = None
-
+        
+        mensaje = ''
+        
         for linea in lineas:
             fecha = linea[:10]
             if fechaActual == fecha:
@@ -156,15 +170,22 @@ def decirDatosHoy(datos):
                     continue
 
         if temperaturaCelsius is not None and datos == stringsJson["CEL"]:
-            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius.')
+            mensaje = 'La temperatura actual es de ' + str(temperaturaCelsius) + ' grados Celsius.'
+            hablar(mensaje)
         elif temperaturaFahrenheit is not None and datos == stringsJson["FAH"]:
-            hablar(f'La temperatura actual es de {temperaturaFahrenheit} grados Fahrenheit.')
-        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and humedad is not None and datos == stringsJson["TODO"] :
-            hablar(f'La temperatura actual es de {temperaturaCelsius} grados Celsius, {temperaturaFahrenheit} grados Fahrenheit y una humedad de {humedad}%')
+            mensaje = 'La temperatura actual es de ' + str(temperaturaFahrenheit) + ' grados Fahrenheit.'
+            hablar(mensaje)
+        elif temperaturaCelsius is not None and temperaturaFahrenheit is not None and humedad is not None and datos == stringsJson["TODO"]:
+            mensaje = 'La temperatura actual es de ' + str(temperaturaCelsius) + ' grados Celsius, ' + str(temperaturaFahrenheit) + ' grados Fahrenheit y una humedad de ' + str(humedad) + '%'
+            hablar(mensaje)
         elif humedad is not None and datos == stringsJson["HUM"]:
-            hablar(f'La humedad actual es de {humedad}%.')
+            mensaje = 'La humedad actual es de ' + str(humedad) + '%.'
+            hablar(mensaje)
         else:
-            hablar("No se encontraron datos sobre hoy.")
+            mensaje = 'No se encontraron datos sobre hoy.'
+            hablar(mensaje)
+            
+        enviarMensaje(mensaje)
         
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")
@@ -198,6 +219,8 @@ def decirMedias(datos):
         temperaturasCelsius = []
         temperaturasFahrenheit = []
         humedades = []
+        
+        mensaje = ''
             
         for linea in lineas:
             try:
@@ -233,15 +256,22 @@ def decirMedias(datos):
             mediaHumedad = calcularMedia(humedades)
         
         if datos == stringsJson["TODO"] and len(temperaturasCelsius) > 0 and len(temperaturasFahrenheit) > 0 and len(humedades) > 0:
-            hablar(f'La temperatura media es de {mediaCelsius} grados Celsius, {mediaFahrenheit} grados Fahrenheit y la humedad media es de {mediaHumedad}%')
+            mensaje = 'La temperatura media es de ' + str(mediaCelsius) + ' grados Celsius, ' + str(mediaFahrenheit) + ' grados Fahrenheit y la humedad media es de ' + str(mediaHumedad) + '%'
+            hablar(mensaje)
         elif datos == stringsJson["CEL"] and len(mediaCelsius) > 0:
-            hablar(f'La temperatura media es de {mediaCelsius} grados Celsius.')
+            mensaje = 'La temperatura media es de ' + str(mediaCelsius) + ' grados Celsius.'
+            hablar(mensaje)
         elif datos == stringsJson["FAH"] and len(mediaFahrenheit) > 0:
-            hablar(f'La temperatura media es de {mediaFahrenheit} grados Faren.')
+            mensaje = 'La temperatura media es de ' + str(mediaFahrenheit) + ' grados Fahrenheit.'
+            hablar(mensaje)
         elif datos == stringsJson["HUM"] and len(mediaHumedad) > 0:
-            hablar(f'La humedad media es de {mediaHumedad}%.')
+            mensaje = 'La humedad media es de ' + str(mediaHumedad) + '%.'
+            hablar(mensaje)
         else:
-            hablar('No hay datos disponibles para calcular la media.')
+            mensaje = 'No hay datos disponibles para calcular la media.'
+            hablar(mensaje)
+
+        enviarMensaje(mensaje)
         
     except FileNotFoundError:
         hablar("No pude encontrar el archivo de datos de temperatura.")

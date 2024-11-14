@@ -1,4 +1,5 @@
 rec_voz_venv
+enviarDatos.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
